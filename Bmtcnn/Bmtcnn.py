@@ -36,7 +36,7 @@ import pkg_resources
 from Bmtcnn.exceptions import InvalidImage
 from Bmtcnn.network.factory import NetworkFactory
 
-__author__ = "Iván de Paz Centeno"
+__author__ = "Iván de Paz Centeno_edited_lev"
 
 
 class StageStatus(object):
@@ -275,10 +275,12 @@ class BMTCNN(object):
         boundingbox[:, 0:4] = np.transpose(np.vstack([b1, b2, b3, b4]))
         return boundingbox
 
-    ###def detect_faces(self, img) -> list:
-    def detect_faces(self, img) -> bool:
+    def detect_faces(self, img) -> list:
+#     def detect_faces(self, img) -> bool:
+                ###Detects bounding boxes from the specified image and returns True if such boxes exist, otherwise returns False
         """
-        Detects bounding boxes from the specified image and returns True if such boxes exist, otherwise returns False
+        Detects bounding boxes from the specified image
+
         :param img: image to process
         :return: list containing all the bounding boxes detected with their keypoints.
         """
@@ -302,29 +304,32 @@ class BMTCNN(object):
 
         [total_boxes, points] = result
         
-        if len(total_boxes) > 0 :
-            return True
-        else:
-            return False
-        ###
-#         bounding_boxes = []
         
-#         for bounding_box, keypoints in zip(total_boxes, points.T):
-#             bounding_boxes.append({
-#                 'box': [max(0, int(bounding_box[0])), max(0, int(bounding_box[1])),
-#                         int(bounding_box[2] - bounding_box[0]), int(bounding_box[3] - bounding_box[1])],
-#                 'confidence': bounding_box[-1],
-#                 'keypoints': {
-#                     'left_eye': (int(keypoints[0]), int(keypoints[5])),
-#                     'right_eye': (int(keypoints[1]), int(keypoints[6])),
-#                     'nose': (int(keypoints[2]), int(keypoints[7])),
-#                     'mouth_left': (int(keypoints[3]), int(keypoints[8])),
-#                     'mouth_right': (int(keypoints[4]), int(keypoints[9])),
-#                 }
-#             }
-#             )
+#         if len(total_boxes) > 0:
+#             return True
+#         else:
+#             return False
+        
+        ###
+        ### dont need this information, just interested in knowing if there is an aligned face in the image.
+        bounding_boxes = []
+        
+        for bounding_box, keypoints in zip(total_boxes, points.T):
+            bounding_boxes.append({
+                'box': [max(0, int(bounding_box[0])), max(0, int(bounding_box[1])),
+                        int(bounding_box[2] - bounding_box[0]), int(bounding_box[3] - bounding_box[1])],
+                'confidence': bounding_box[-1],
+                'keypoints': {
+                    'left_eye': (int(keypoints[0]), int(keypoints[5])),
+                    'right_eye': (int(keypoints[1]), int(keypoints[6])),
+                    'nose': (int(keypoints[2]), int(keypoints[7])),
+                    'mouth_left': (int(keypoints[3]), int(keypoints[8])),
+                    'mouth_right': (int(keypoints[4]), int(keypoints[9])),
+                }
+            }
+            )
 
-#         return bounding_boxes
+        return bounding_boxes
         
 
     def __stage1(self, image, scales: list, stage_status: StageStatus):
@@ -346,8 +351,8 @@ class BMTCNN(object):
 
             out = self._pnet.predict(img_y)
 
-            out0 = np.transpose(out[0], (0, 2, 1, 3))
-            out1 = np.transpose(out[1], (0, 2, 1, 3))
+            out0 = np.transpose(out[0], (0, 2, 1, 3))  # prob for each box
+            out1 = np.transpose(out[1], (0, 2, 1, 3))  # coord of each box
 
             boxes, _ = self.__generate_bounding_box(out1[0, :, :, 1].copy(),
                                                     out0[0, :, :, :].copy(), scale, self._steps_threshold[0])
@@ -361,7 +366,7 @@ class BMTCNN(object):
         numboxes = total_boxes.shape[0]
 
         if numboxes > 0:
-            pick = self.__nms(total_boxes.copy(), 0.7, 'Union')
+            pick = self.__nms(total_boxes.copy(), 0.7, 'Union')  # running nms again to stay with 1 box per face
             total_boxes = total_boxes[pick, :]
 
             regw = total_boxes[:, 2] - total_boxes[:, 0]
